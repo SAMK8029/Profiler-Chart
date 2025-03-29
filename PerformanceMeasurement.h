@@ -5,20 +5,6 @@
 #include <fstream>
 #include <thread>
 
-/**** Not Completed ! ****/
-
-#define COUNT_ARGS(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, N, ...) N
-#define EXPAND_ARGS(args) COUNT_ARGS args
-#define COUNT(...) EXPAND_ARGS((__VA_ARGS__, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0))
-
-#define MyMacro_1(name) PerformanceMeasurement name(std::string&& eventName , PerformanceMeasurementUnit unit = PerformanceMeasurementUnit::MicroSecond , bool saveResultToJsonFile = false , bool printLogOnDestruction = true) : PerformanceMeasurement(unit , saveResultToJsonFile , printLogOnDestruction)
-#define MyMacro_2(name, count) std::cout << "Two arguments: " << name << ", " << count << std::endl
-
-#define MyMacro_OVERLOAD(_1, _2, NAME, ...) NAME
-#define MyMacro(...) MyMacro_OVERLOAD(__VA_ARGS__, MyMacro_2, MyMacro_1)(__VA_ARGS__)
-
-/************************/
-
 enum class PerformanceMeasurementUnit
 {
     NanoSecond  ,
@@ -28,6 +14,100 @@ enum class PerformanceMeasurementUnit
     Second      ,
     Minute
 };
+
+/**** Not Completed ! ****/
+
+// Helper macros for counting arguments
+#define PERFORMANCE_MEASUREMENT_COUNT(...) \
+PERFORMANCE_MEASUREMENT_COUNT_(__VA_ARGS__, 6, 5, 4, 3, 2, 1)
+#define PERFORMANCE_MEASUREMENT_COUNT_(_1, _2, _3, _4, _5, _6, N, ...) N
+
+// Macro dispatcher
+#define PERFORMANCE_MEASUREMENT(varName, ...) \
+PERFORMANCE_MEASUREMENT_CHOOSER(PERFORMANCE_MEASUREMENT_COUNT(__VA_ARGS__))(varName, __VA_ARGS__)
+
+// Individual cases
+#define PERFORMANCE_MEASUREMENT_CHOOSER(N) \
+    PERFORMANCE_MEASUREMENT_CHOOSER_(N)
+#define PERFORMANCE_MEASUREMENT_CHOOSER_(N) \
+    PERFORMANCE_MEASUREMENT_##N
+
+// Case 1: Just event name (string)
+#define PERFORMANCE_MEASUREMENT_1(varName, eventName) \
+    PerformanceMeasurement varName(#eventName)
+
+// Case 2: Event name + unit
+#define PERFORMANCE_MEASUREMENT_2(varName, eventName, unit) \
+    PerformanceMeasurement varName(#eventName, unit)
+
+// Case 3: Event name + unit + save flag
+#define PERFORMANCE_MEASUREMENT_3(varName, eventName, unit, saveResultToJsonFile) \
+    PerformanceMeasurement varName(#eventName, unit, saveResultToJsonFile)
+
+// Case 4: Event name + unit + save flag + print flag
+#define PERFORMANCE_MEASUREMENT_4(varName, eventName, unit, saveResultToJsonFile, printLogOnDestruction) \
+    PerformanceMeasurement varName(#eventName, unit, saveResultToJsonFile, printLogOnDestruction)
+
+// Case 5: Unit + save flag + print flag (no event name)
+#define PERFORMANCE_MEASUREMENT_5(varName, unit, saveResultToJsonFile, printLogOnDestruction) \
+    PerformanceMeasurement varName(unit, saveResultToJsonFile, printLogOnDestruction)
+
+// Case 6: Event name + save flag + print flag (special case)
+#define PERFORMANCE_MEASUREMENT_6(varName, eventName, saveResultToJsonFile, printLogOnDestruction) \
+    PerformanceMeasurement varName(#eventName, saveResultToJsonFile, printLogOnDestruction)
+
+
+
+
+
+
+
+
+// Helper macros for counting arguments
+#define PERFORMANCE_MEASUREMENT_STRING_COUNT(...) \
+PERFORMANCE_MEASUREMENT_STRING_COUNT_(__VA_ARGS__, 6, 5, 4, 3, 2, 1)
+#define PERFORMANCE_MEASUREMENT_STRING_COUNT_(_1, _2, _3, _4, _5, _6, N, ...) N
+
+// Macro dispatcher
+#define PERFORMANCE_MEASUREMENT_STRING(...) \
+PERFORMANCE_MEASUREMENT_STRING_CHOOSER(PERFORMANCE_MEASUREMENT_STRING_COUNT(__VA_ARGS__))(__VA_ARGS__)
+
+// Individual cases
+#define PERFORMANCE_MEASUREMENT_STRING_CHOOSER(N) \
+    PERFORMANCE_MEASUREMENT_STRING_CHOOSER_(N)
+#define PERFORMANCE_MEASUREMENT_STRING_CHOOSER_(N) \
+    PERFORMANCE_MEASUREMENT_STRING_##N
+
+// Case 1: Just event name (string)
+#define PERFORMANCE_MEASUREMENT_STRING_1(eventName) \
+    PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(eventName)
+
+// Case 2: Event name + unit
+#define PERFORMANCE_MEASUREMENT_STRING_2(eventName, unit) \
+    PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(eventName, unit)
+
+// Case 3: Event name + unit + save flag
+#define PERFORMANCE_MEASUREMENT_STRING_3(eventName, unit, saveResultToJsonFile) \
+    PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(eventName, unit, saveResultToJsonFile)
+
+// Case 4: Event name + unit + save flag + print flag
+#define PERFORMANCE_MEASUREMENT_STRING_4(eventName, unit, saveResultToJsonFile, printLogOnDestruction) \
+    PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(eventName, unit, saveResultToJsonFile, printLogOnDestruction)
+
+// Case 5: Unit + save flag + print flag (no event name)
+#define PERFORMANCE_MEASUREMENT_STRING_5(unit, saveResultToJsonFile, printLogOnDestruction) \
+    PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(unit, saveResultToJsonFile, printLogOnDestruction)
+
+// Case 6: Event name + save flag + print flag
+#define PERFORMANCE_MEASUREMENT_STRING_6(eventName, saveResultToJsonFile, printLogOnDestruction) \
+    PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(eventName, saveResultToJsonFile, printLogOnDestruction)
+
+// Helper for unique variable names
+#define CONCAT(a, b) CONCAT_(a, b)
+#define CONCAT_(a, b) a##b
+/************************/
+
+
 
 struct ProfileResult
 {
@@ -48,14 +128,11 @@ class BenchmarkJson
     ~BenchmarkJson()                               = delete;
 
 public:
-
     static void beginSession(const std::string& filepath = "results.json")
     {
         _outputStream.open(filepath);
         writeHeader();
     }
-
-    void f(){}
 
     static void endSession()
     {
@@ -115,9 +192,18 @@ class PerformanceMeasurement
     PerformanceMeasurement& operator=(PerformanceMeasurement &&)     = delete;
 
 private:
+    inline void setEndTimePoint() noexcept
+    {
+        if(_isEndTimePointInitialized == false)
+        {
+            _end = std::chrono::high_resolution_clock::now();
+
+            _isEndTimePointInitialized = true;
+        }
+    }
+
     inline auto getSpentTimeInMicroSecond() noexcept
     {
-        _end = std::chrono::high_resolution_clock::now();
         return std::chrono::duration_cast<std::chrono::microseconds>(_end - _begin).count();
     }
 
@@ -132,31 +218,35 @@ private:
     }
 
 public:
-
-    inline PerformanceMeasurement(std::string&& eventName , PerformanceMeasurementUnit unit = PerformanceMeasurementUnit::MicroSecond , bool saveResultToJsonFile = false , bool printLogOnDestruction = true) : PerformanceMeasurement(unit , saveResultToJsonFile , printLogOnDestruction)
+    inline PerformanceMeasurement(std::string&& eventName , PerformanceMeasurementUnit unit = PerformanceMeasurementUnit::MicroSecond , bool saveResultToJsonFile = false , bool printLogOnDestruction = true) : PerformanceMeasurement(unit , printLogOnDestruction)
     {
+        _saveResultToJsonFile = saveResultToJsonFile;
         _eventName = std::move(eventName);
     }
 
-    inline PerformanceMeasurement(const std::string& eventName , PerformanceMeasurementUnit unit = PerformanceMeasurementUnit::MicroSecond , bool saveResultToJsonFile = false , bool printLogOnDestruction = true) : PerformanceMeasurement(unit , saveResultToJsonFile , printLogOnDestruction)
+    inline PerformanceMeasurement(const std::string& eventName , PerformanceMeasurementUnit unit = PerformanceMeasurementUnit::MicroSecond , bool saveResultToJsonFile = false , bool printLogOnDestruction = true) : PerformanceMeasurement(unit , printLogOnDestruction)
     {
         _eventName = eventName;
+        _saveResultToJsonFile = saveResultToJsonFile;
     }
 
-    inline PerformanceMeasurement(const std::string& eventName , bool saveResultToJsonFile = false , bool printLogOnDestruction = true) : PerformanceMeasurement(PerformanceMeasurementUnit::MicroSecond , saveResultToJsonFile , printLogOnDestruction)
+    inline PerformanceMeasurement(const std::string& eventName , bool saveResultToJsonFile = false , bool printLogOnDestruction = true) : PerformanceMeasurement(PerformanceMeasurementUnit::MicroSecond , printLogOnDestruction)
     {
         _eventName = eventName;
+        _saveResultToJsonFile = saveResultToJsonFile;
     }
 
-    inline PerformanceMeasurement(PerformanceMeasurementUnit unit = PerformanceMeasurementUnit::MicroSecond , bool saveResultToJsonFile = false , bool printLogOnDestruction = true) : _begin(std::chrono::high_resolution_clock::now()) , _unit(unit) , _saveResultToJsonFile(saveResultToJsonFile) , _printLogOnDestruction(printLogOnDestruction) , _canWriteToFile(true)
+    inline PerformanceMeasurement(PerformanceMeasurementUnit unit = PerformanceMeasurementUnit::MicroSecond , bool printLogOnDestruction = true) : _begin(std::chrono::high_resolution_clock::now()) , _unit(unit) , _saveResultToJsonFile(false) , _printLogOnDestruction(printLogOnDestruction) , _canWriteToFile(true)
     {
     }
 
     inline auto getSpentTimeTillNow() noexcept
     {
+        setEndTimePoint();
+
         if(_canWriteToFile && _saveResultToJsonFile)
         {
-            BenchmarkJson::writeProfile({_eventName, getBeginTimePointInMicroSecond() , getEndTimePointInMicroSecond() , getSpentTimeInMicroSecond() , std::hash<std::thread::id>{}(std::this_thread::get_id())});
+            BenchmarkJson::writeProfile({_eventName, getSpentTimeInMicroSecond() , getBeginTimePointInMicroSecond() , getEndTimePointInMicroSecond() , std::hash<std::thread::id>{}(std::this_thread::get_id())});
             _canWriteToFile = false;
         }
 
@@ -193,13 +283,6 @@ public:
 
     inline ~PerformanceMeasurement()
     {
-        if(_saveResultToJsonFile && _canWriteToFile)
-        {
-            BenchmarkJson::writeProfile({_eventName, getSpentTimeInMicroSecond() , getBeginTimePointInMicroSecond() , getEndTimePointInMicroSecond() , std::hash<std::thread::id>{}(std::this_thread::get_id())});
-
-            _canWriteToFile = false;
-        }
-
         if(_printLogOnDestruction)
         {
             std::string unitStr;
@@ -240,6 +323,15 @@ public:
 
             std::clog << "PerformanceMeasurement - " << _eventName << " execution time : " << getSpentTimeTillNow() << " " << unitStr << "\n";
         }
+
+        if(_saveResultToJsonFile && _canWriteToFile)
+        {
+            setEndTimePoint();
+
+            BenchmarkJson::writeProfile({_eventName, getSpentTimeInMicroSecond() , getBeginTimePointInMicroSecond() , getEndTimePointInMicroSecond() , std::hash<std::thread::id>{}(std::this_thread::get_id())});
+
+            _canWriteToFile = false;
+        }
     }
 
 private:
@@ -247,8 +339,8 @@ private:
     std::chrono::time_point<std::chrono::high_resolution_clock, std::chrono::nanoseconds> _end;
     const PerformanceMeasurementUnit _unit;
     std::string                      _eventName{};
-    const bool                       _saveResultToJsonFile;
+    bool                             _saveResultToJsonFile;
     const bool                       _printLogOnDestruction;
     bool                             _canWriteToFile;
+    bool                             _isEndTimePointInitialized = false;
 };
-
