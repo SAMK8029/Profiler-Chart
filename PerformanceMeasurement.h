@@ -15,99 +15,120 @@ enum class PerformanceMeasurementUnit
     Minute
 };
 
-/**** Not Completed ! ****/
-
 // Helper macros for counting arguments
-#define PERFORMANCE_MEASUREMENT_COUNT(...) \
-PERFORMANCE_MEASUREMENT_COUNT_(__VA_ARGS__, 6, 5, 4, 3, 2, 1)
-#define PERFORMANCE_MEASUREMENT_COUNT_(_1, _2, _3, _4, _5, _6, N, ...) N
+#define MEASURE_PERFORMANCE_AS_OBJECT_COUNT(...) \
+MEASURE_PERFORMANCE_AS_OBJECT_COUNT_(__VA_ARGS__, 6, 5, 4, 3, 2, 1)
+#define MEASURE_PERFORMANCE_AS_OBJECT_COUNT_(_1, _2, _3, _4, _5, _6, N, ...) N
 
 // Macro dispatcher
-#define PERFORMANCE_MEASUREMENT(varName, ...) \
-PERFORMANCE_MEASUREMENT_CHOOSER(PERFORMANCE_MEASUREMENT_COUNT(__VA_ARGS__))(varName, __VA_ARGS__)
+#define MEASURE_PERFORMANCE_AS_OBJECT(varName, ...) \
+MEASURE_PERFORMANCE_AS_OBJECT_CHOOSER(MEASURE_PERFORMANCE_AS_OBJECT_COUNT(__VA_ARGS__))(varName, __VA_ARGS__)
 
 // Individual cases
-#define PERFORMANCE_MEASUREMENT_CHOOSER(N) \
-    PERFORMANCE_MEASUREMENT_CHOOSER_(N)
-#define PERFORMANCE_MEASUREMENT_CHOOSER_(N) \
-    PERFORMANCE_MEASUREMENT_##N
+#define MEASURE_PERFORMANCE_AS_OBJECT_CHOOSER(N) \
+    MEASURE_PERFORMANCE_AS_OBJECT_CHOOSER_(N)
+#define MEASURE_PERFORMANCE_AS_OBJECT_CHOOSER_(N) \
+    MEASURE_PERFORMANCE_AS_OBJECT_##N
 
 // Case 1: Just event name (string)
-#define PERFORMANCE_MEASUREMENT_1(varName, eventName) \
+#define MEASURE_PERFORMANCE_AS_OBJECT_1(varName, eventName) \
     PerformanceMeasurement varName(#eventName)
 
 // Case 2: Event name + unit
-#define PERFORMANCE_MEASUREMENT_2(varName, eventName, unit) \
+#define MEASURE_PERFORMANCE_AS_OBJECT_2(varName, eventName, unit) \
     PerformanceMeasurement varName(#eventName, unit)
 
 // Case 3: Event name + unit + save flag
-#define PERFORMANCE_MEASUREMENT_3(varName, eventName, unit, saveResultToJsonFile) \
+#define MEASURE_PERFORMANCE_AS_OBJECT_3(varName, eventName, unit, saveResultToJsonFile) \
     PerformanceMeasurement varName(#eventName, unit, saveResultToJsonFile)
 
 // Case 4: Event name + unit + save flag + print flag
-#define PERFORMANCE_MEASUREMENT_4(varName, eventName, unit, saveResultToJsonFile, printLogOnDestruction) \
+#define MEASURE_PERFORMANCE_AS_OBJECT_4(varName, eventName, unit, saveResultToJsonFile, printLogOnDestruction) \
     PerformanceMeasurement varName(#eventName, unit, saveResultToJsonFile, printLogOnDestruction)
 
 // Case 5: Unit + save flag + print flag (no event name)
-#define PERFORMANCE_MEASUREMENT_5(varName, unit, saveResultToJsonFile, printLogOnDestruction) \
+#define MEASURE_PERFORMANCE_AS_OBJECT_5(varName, unit, saveResultToJsonFile, printLogOnDestruction) \
     PerformanceMeasurement varName(unit, saveResultToJsonFile, printLogOnDestruction)
 
 // Case 6: Event name + save flag + print flag (special case)
-#define PERFORMANCE_MEASUREMENT_6(varName, eventName, saveResultToJsonFile, printLogOnDestruction) \
+#define MEASURE_PERFORMANCE_AS_OBJECT_6(varName, eventName, saveResultToJsonFile, printLogOnDestruction) \
     PerformanceMeasurement varName(#eventName, saveResultToJsonFile, printLogOnDestruction)
 
 
+//
 
 
-
-
-
-
-// Helper macros for counting arguments
-#define PERFORMANCE_MEASUREMENT_STRING_COUNT(...) \
-PERFORMANCE_MEASUREMENT_STRING_COUNT_(__VA_ARGS__, 6, 5, 4, 3, 2, 1)
-#define PERFORMANCE_MEASUREMENT_STRING_COUNT_(_1, _2, _3, _4, _5, _6, N, ...) N
-
-// Macro dispatcher
-#define PERFORMANCE_MEASUREMENT_STRING(...) \
-PERFORMANCE_MEASUREMENT_STRING_CHOOSER(PERFORMANCE_MEASUREMENT_STRING_COUNT(__VA_ARGS__))(__VA_ARGS__)
-
-// Individual cases
-#define PERFORMANCE_MEASUREMENT_STRING_CHOOSER(N) \
-    PERFORMANCE_MEASUREMENT_STRING_CHOOSER_(N)
-#define PERFORMANCE_MEASUREMENT_STRING_CHOOSER_(N) \
-    PERFORMANCE_MEASUREMENT_STRING_##N
-
-// Case 1: Just event name (string)
-#define PERFORMANCE_MEASUREMENT_STRING_1(eventName) \
-    PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(eventName)
-
-// Case 2: Event name + unit
-#define PERFORMANCE_MEASUREMENT_STRING_2(eventName, unit) \
-    PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(eventName, unit)
-
-// Case 3: Event name + unit + save flag
-#define PERFORMANCE_MEASUREMENT_STRING_3(eventName, unit, saveResultToJsonFile) \
-    PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(eventName, unit, saveResultToJsonFile)
-
-// Case 4: Event name + unit + save flag + print flag
-#define PERFORMANCE_MEASUREMENT_STRING_4(eventName, unit, saveResultToJsonFile, printLogOnDestruction) \
-    PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(eventName, unit, saveResultToJsonFile, printLogOnDestruction)
-
-// Case 5: Unit + save flag + print flag (no event name)
-#define PERFORMANCE_MEASUREMENT_STRING_5(unit, saveResultToJsonFile, printLogOnDestruction) \
-    PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(unit, saveResultToJsonFile, printLogOnDestruction)
-
-// Case 6: Event name + save flag + print flag
-#define PERFORMANCE_MEASUREMENT_STRING_6(eventName, saveResultToJsonFile, printLogOnDestruction) \
-    PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(eventName, saveResultToJsonFile, printLogOnDestruction)
-
-// Helper for unique variable names
+// Helper macros for unique variable names
 #define CONCAT(a, b) CONCAT_(a, b)
 #define CONCAT_(a, b) a##b
-/************************/
+
+// Helper macros for counting arguments
+#define PERFORMANCE_ARG_COUNT(...) \
+PERFORMANCE_ARG_COUNT_(__VA_ARGS__, 6, 5, 4, 3, 2, 1)
+#define PERFORMANCE_ARG_COUNT_(_1, _2, _3, _4, _5, _6, N, ...) N
+
+// Macro for measuring entire scope performance
+#define MEASURE_PERFORMANCE_FOR_ENTIRE_SCOPE(...) \
+PERFORMANCE_SCOPE_CHOOSER(PERFORMANCE_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
+
+#define PERFORMANCE_SCOPE_CHOOSER(N) \
+    PERFORMANCE_SCOPE_CHOOSER_(N)
+#define PERFORMANCE_SCOPE_CHOOSER_(N) \
+    PERFORMANCE_SCOPE_##N
+
+// Scope measurement cases
+#define PERFORMANCE_SCOPE_1(eventName) \
+    PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(eventName)
+
+#define PERFORMANCE_SCOPE_2(eventName, unit) \
+    PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(eventName, unit)
+
+#define PERFORMANCE_SCOPE_3(eventName, unit, saveResult) \
+    PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(eventName, unit, saveResult)
+
+#define PERFORMANCE_SCOPE_4(eventName, unit, saveResult, printLog) \
+    PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(eventName, unit, saveResult, printLog)
+
+#define PERFORMANCE_SCOPE_5(unit, saveResult, printLog) \
+    PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(unit, saveResult, printLog)
+
+#define PERFORMANCE_SCOPE_6(eventName, saveResult, printLog) \
+    PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(eventName, saveResult, printLog)
 
 
+//
+
+
+// Macro for automatic function performance measurement
+#define MEASURE_PERFORMANCE_FOR_FUNCTION(...) \
+    MEASURE_PERFORMANCE_FOR_FUNCTION_CHOOSER(PERFORMANCE_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
+
+#define MEASURE_PERFORMANCE_FOR_FUNCTION_CHOOSER(N) \
+    MEASURE_PERFORMANCE_FOR_FUNCTION_CHOOSER_(N)
+#define MEASURE_PERFORMANCE_FOR_FUNCTION_CHOOSER_(N) \
+    MEASURE_PERFORMANCE_FOR_FUNCTION_##N
+
+// Compiler detection
+#if defined(_MSC_VER)
+#define FUNCTION_NAME_WITH_SIGNATURE __FUNCSIG__
+#elif defined(__GNUC__) || defined(__clang__)
+#define FUNCTION_NAME_WITH_SIGNATURE __PRETTY_FUNCTION__
+#else
+#define FUNCTION_NAME_WITH_SIGNATURE __func__
+#endif
+
+// Function measurement cases
+#define MEASURE_PERFORMANCE_FOR_FUNCTION_0() \
+    PerformanceMeasurement CONCAT(_func_perf_, __LINE__)(FUNCTION_NAME_WITH_SIGNATURE)
+
+#define MEASURE_PERFORMANCE_FOR_FUNCTION_1(unit) \
+    PerformanceMeasurement CONCAT(_func_perf_, __LINE__)(FUNCTION_NAME_WITH_SIGNATURE, unit)
+
+#define MEASURE_PERFORMANCE_FOR_FUNCTION_2(unit, saveResult) \
+    PerformanceMeasurement CONCAT(_func_perf_, __LINE__)(FUNCTION_NAME_WITH_SIGNATURE, unit, saveResult)
+
+#define MEASURE_PERFORMANCE_FOR_FUNCTION_3(unit, saveResult, printLog) \
+    PerformanceMeasurement CONCAT(_func_perf_, __LINE__)(FUNCTION_NAME_WITH_SIGNATURE, unit, saveResult, printLog)
 
 struct ProfileResult
 {
