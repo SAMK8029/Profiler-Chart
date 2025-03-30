@@ -18,14 +18,17 @@ enum class PerformanceMeasurementUnit
 
 #ifndef DO_NOT_MEASURE_PERFORMANCE
 
+#define BENCHMARK_JSON_BEGIN_SEESION(name) BenchmarkJson::beginSession(name)
+#define BENCHMARK_JSON_END_SEESION(name) BenchmarkJson::endSession()
+
 // Helper macros for counting arguments
 #define MEASURE_PERFORMANCE_AS_OBJECT_COUNT(...) \
 MEASURE_PERFORMANCE_AS_OBJECT_COUNT_(__VA_ARGS__, 6, 5, 4, 3, 2, 1)
 #define MEASURE_PERFORMANCE_AS_OBJECT_COUNT_(_1, _2, _3, _4, _5, _6, N, ...) N
 
 // Macro dispatcher
-#define MEASURE_PERFORMANCE_AS_OBJECT(varName, ...) \
-MEASURE_PERFORMANCE_AS_OBJECT_CHOOSER(MEASURE_PERFORMANCE_AS_OBJECT_COUNT(__VA_ARGS__))(varName, __VA_ARGS__)
+#define MEASURE_PERFORMANCE_AS_OBJECT(...) \
+MEASURE_PERFORMANCE_AS_OBJECT_CHOOSER(MEASURE_PERFORMANCE_AS_OBJECT_COUNT(__VA_ARGS__))(__VA_ARGS__)
 
 // Individual cases
 #define MEASURE_PERFORMANCE_AS_OBJECT_CHOOSER(N) \
@@ -34,77 +37,73 @@ MEASURE_PERFORMANCE_AS_OBJECT_CHOOSER(MEASURE_PERFORMANCE_AS_OBJECT_COUNT(__VA_A
     MEASURE_PERFORMANCE_AS_OBJECT_##N
 
 // Case 1: Just event name (string)
-#define MEASURE_PERFORMANCE_AS_OBJECT_1(varName, eventName) \
-    PerformanceMeasurement varName(#eventName)
+#define MEASURE_PERFORMANCE_AS_OBJECT_1(eventName) \
+    PerformanceMeasurement eventName(#eventName)
 
 // Case 2: Event name + unit
-#define MEASURE_PERFORMANCE_AS_OBJECT_2(varName, eventName, unit) \
-    PerformanceMeasurement varName(#eventName, unit)
+#define MEASURE_PERFORMANCE_AS_OBJECT_2(eventName, unit) \
+    PerformanceMeasurement eventName(#eventName, unit)
 
 // Case 3: Event name + unit + save flag
-#define MEASURE_PERFORMANCE_AS_OBJECT_3(varName, eventName, unit, saveResultToJsonFile) \
-    PerformanceMeasurement varName(#eventName, unit, saveResultToJsonFile)
+#define MEASURE_PERFORMANCE_AS_OBJECT_3(eventName, unit, saveResultToJsonFile) \
+PerformanceMeasurement eventName(#eventName, unit, saveResultToJsonFile)
 
 // Case 4: Event name + unit + save flag + print flag
-#define MEASURE_PERFORMANCE_AS_OBJECT_4(varName, eventName, unit, saveResultToJsonFile, printLogOnDestruction) \
-    PerformanceMeasurement varName(#eventName, unit, saveResultToJsonFile, printLogOnDestruction)
+#define MEASURE_PERFORMANCE_AS_OBJECT_4(eventName, unit, saveResultToJsonFile, printLogOnDestruction) \
+PerformanceMeasurement eventName(#eventName, unit, saveResultToJsonFile, printLogOnDestruction)
 
 // Case 5: Unit + save flag + print flag (no event name)
-#define MEASURE_PERFORMANCE_AS_OBJECT_5(varName, unit, saveResultToJsonFile, printLogOnDestruction) \
-    PerformanceMeasurement varName(unit, saveResultToJsonFile, printLogOnDestruction)
+#define MEASURE_PERFORMANCE_AS_OBJECT_5(unit, saveResultToJsonFile, printLogOnDestruction) \
+PerformanceMeasurement eventName(unit, saveResultToJsonFile, printLogOnDestruction)
 
 // Case 6: Event name + save flag + print flag (special case)
-#define MEASURE_PERFORMANCE_AS_OBJECT_6(varName, eventName, saveResultToJsonFile, printLogOnDestruction) \
-    PerformanceMeasurement varName(#eventName, saveResultToJsonFile, printLogOnDestruction)
+#define MEASURE_PERFORMANCE_AS_OBJECT_6(eventName, saveResultToJsonFile, printLogOnDestruction) \
+PerformanceMeasurement eventName(#eventName, saveResultToJsonFile, printLogOnDestruction)
 
 
 //
-
 
 // Helper macros for unique variable names
 #define CONCAT(a, b) CONCAT_(a, b)
 #define CONCAT_(a, b) a##b
 
 // Helper macros for counting arguments
-#define PERFORMANCE_ARG_COUNT(...) \
-PERFORMANCE_ARG_COUNT_(__VA_ARGS__, 6, 5, 4, 3, 2, 1)
-#define PERFORMANCE_ARG_COUNT_(_1, _2, _3, _4, _5, _6, N, ...) N
+#define MEASURE_PERFORMANCE_FOR_ENTIRE_SCOPE_ARG_COUNT(...) \
+MEASURE_PERFORMANCE_FOR_ENTIRE_SCOPE_ARG_COUNT_(__VA_ARGS__, 6, 5, 4, 3, 2, 1)
+#define MEASURE_PERFORMANCE_FOR_ENTIRE_SCOPE_ARG_COUNT_(_1, _2, _3, _4, _5, _6, N, ...) N
 
 // Macro for measuring entire scope performance
 #define MEASURE_PERFORMANCE_FOR_ENTIRE_SCOPE(...) \
-PERFORMANCE_SCOPE_CHOOSER(PERFORMANCE_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
+MEASURE_PERFORMANCE_FOR_ENTIRE_SCOPE_CHOOSER(MEASURE_PERFORMANCE_FOR_ENTIRE_SCOPE_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
 
-#define PERFORMANCE_SCOPE_CHOOSER(N) \
-    PERFORMANCE_SCOPE_CHOOSER_(N)
-#define PERFORMANCE_SCOPE_CHOOSER_(N) \
-    PERFORMANCE_SCOPE_##N
+#define MEASURE_PERFORMANCE_FOR_ENTIRE_SCOPE_CHOOSER(N) \
+    MEASURE_PERFORMANCE_FOR_ENTIRE_SCOPE_CHOOSER_(N)
+#define MEASURE_PERFORMANCE_FOR_ENTIRE_SCOPE_CHOOSER_(N) \
+    MEASURE_PERFORMANCE_FOR_ENTIRE_SCOPE_##N
 
 // Scope measurement cases
-#define PERFORMANCE_SCOPE_1(eventName) \
-    PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(eventName)
+#define MEASURE_PERFORMANCE_FOR_ENTIRE_SCOPE_1(eventName) \
+    PerformanceMeasurement CONCAT(_perf_meas_, __LINE__){eventName}
 
-#define PERFORMANCE_SCOPE_2(eventName, unit) \
+#define MEASURE_PERFORMANCE_FOR_ENTIRE_SCOPE_2(eventName, unit) \
     PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(eventName, unit)
 
-#define PERFORMANCE_SCOPE_3(eventName, unit, saveResult) \
+// TODO: MEASURE_PERFORMANCE_FOR_ENTIRE_SCOPE_3 conflicts with MEASURE_PERFORMANCE_FOR_ENTIRE_SCOPE_5 and MEASURE_PERFORMANCE_FOR_ENTIRE_SCOPE_6
+#define MEASURE_PERFORMANCE_FOR_ENTIRE_SCOPE_3(eventName, unit, saveResult) \
     PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(eventName, unit, saveResult)
 
-#define PERFORMANCE_SCOPE_4(eventName, unit, saveResult, printLog) \
+#define MEASURE_PERFORMANCE_FOR_ENTIRE_SCOPE_4(eventName, unit, saveResult, printLog) \
     PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(eventName, unit, saveResult, printLog)
 
-#define PERFORMANCE_SCOPE_5(unit, saveResult, printLog) \
+#define MEASURE_PERFORMANCE_FOR_ENTIRE_SCOPE_5(unit, saveResult, printLog) \
     PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(unit, saveResult, printLog)
 
-#define PERFORMANCE_SCOPE_6(eventName, saveResult, printLog) \
+#define MEASURE_PERFORMANCE_FOR_ENTIRE_SCOPE_6(eventName, saveResult, printLog) \
     PerformanceMeasurement CONCAT(_perf_meas_, __LINE__)(eventName, saveResult, printLog)
 
 
 //
 
-
-// Macro for automatic function performance measurement
-#define MEASURE_PERFORMANCE_FOR_FUNCTION(...) \
-    MEASURE_PERFORMANCE_FOR_FUNCTION_CHOOSER(PERFORMANCE_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
 
 #define MEASURE_PERFORMANCE_FOR_FUNCTION_CHOOSER(N) \
     MEASURE_PERFORMANCE_FOR_FUNCTION_CHOOSER_(N)
@@ -120,9 +119,17 @@ PERFORMANCE_SCOPE_CHOOSER(PERFORMANCE_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
 #define FUNCTION_NAME_WITH_SIGNATURE __func__
 #endif
 
-// Function measurement cases
+#define GET_MACRO(_0, _1, _2, _3, NAME, ...) NAME
+
+#define MEASURE_PERFORMANCE_FOR_FUNCTION(...) \
+GET_MACRO(_0, ##__VA_ARGS__, \
+          MEASURE_PERFORMANCE_FOR_FUNCTION_3, \
+          MEASURE_PERFORMANCE_FOR_FUNCTION_2, \
+          MEASURE_PERFORMANCE_FOR_FUNCTION_1, \
+          MEASURE_PERFORMANCE_FOR_FUNCTION_0)(__VA_ARGS__)
+
 #define MEASURE_PERFORMANCE_FOR_FUNCTION_0() \
-    PerformanceMeasurement CONCAT(_func_perf_, __LINE__)(FUNCTION_NAME_WITH_SIGNATURE)
+PerformanceMeasurement CONCAT(_func_perf_, __LINE__)(FUNCTION_NAME_WITH_SIGNATURE)
 
 #define MEASURE_PERFORMANCE_FOR_FUNCTION_1(unit) \
     PerformanceMeasurement CONCAT(_func_perf_, __LINE__)(FUNCTION_NAME_WITH_SIGNATURE, unit)
@@ -134,9 +141,13 @@ PERFORMANCE_SCOPE_CHOOSER(PERFORMANCE_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
     PerformanceMeasurement CONCAT(_func_perf_, __LINE__)(FUNCTION_NAME_WITH_SIGNATURE, unit, saveResult, printLog)
 
 #else
+
 #define MEASURE_PERFORMANCE_AS_OBJECT(varName, ...)
 #define MEASURE_PERFORMANCE_FOR_ENTIRE_SCOPE(...)
 #define MEASURE_PERFORMANCE_FOR_FUNCTION(...)
+#define BENCHMARK_JSON_BEGIN_SEESION(name)
+#define BENCHMARK_JSON_END_SEESION(name)
+
 #endif
 
 struct ProfileResult
@@ -247,11 +258,42 @@ private:
         return std::chrono::time_point_cast<std::chrono::microseconds>(_end).time_since_epoch().count();
     }
 
+    inline std::string setUnitStr()
+    {
+        switch (_unit)
+        {
+            case PerformanceMeasurementUnit::NanoSecond:
+            {
+                return std::string("NanoSeconds");
+            }
+            case PerformanceMeasurementUnit::MicroSecond:
+            {
+                return std::string("MicroSeconds");
+            }
+            case PerformanceMeasurementUnit::MilliSecond:
+            {
+                return std::string("MilliSeconds");
+            }
+            case PerformanceMeasurementUnit::CentiSecond:
+            {
+                return std::string("CentiSeconds");
+            }
+            case PerformanceMeasurementUnit::Second:
+            {
+                return std::string("Seconds");
+            }
+            case PerformanceMeasurementUnit::Minute:
+            {
+                return std::string("Minutes");
+            }
+        }
+    }
+
 public:
     inline PerformanceMeasurement(std::string&& eventName , PerformanceMeasurementUnit unit = PerformanceMeasurementUnit::MicroSecond , bool saveResultToJsonFile = false , bool printLogOnDestruction = true) : PerformanceMeasurement(unit , printLogOnDestruction)
     {
-        _saveResultToJsonFile = saveResultToJsonFile;
         _eventName = std::move(eventName);
+        _saveResultToJsonFile = saveResultToJsonFile;
     }
 
     inline PerformanceMeasurement(const std::string& eventName , PerformanceMeasurementUnit unit = PerformanceMeasurementUnit::MicroSecond , bool saveResultToJsonFile = false , bool printLogOnDestruction = true) : PerformanceMeasurement(unit , printLogOnDestruction)
@@ -266,7 +308,7 @@ public:
         _saveResultToJsonFile = saveResultToJsonFile;
     }
 
-    inline PerformanceMeasurement(PerformanceMeasurementUnit unit = PerformanceMeasurementUnit::MicroSecond , bool printLogOnDestruction = true) : _begin(std::chrono::high_resolution_clock::now()) , _unit(unit) , _saveResultToJsonFile(false) , _printLogOnDestruction(printLogOnDestruction) , _canWriteToFile(true)
+    inline PerformanceMeasurement(PerformanceMeasurementUnit unit = PerformanceMeasurementUnit::MicroSecond , bool printLogOnDestruction = true) : _begin(std::chrono::high_resolution_clock::now()) , _unit(unit) , _saveResultToJsonFile(false) , _unitStr(setUnitStr()) , _printLogOnDestruction(printLogOnDestruction) , _canWriteToFile(true)
     {
     }
 
@@ -311,47 +353,16 @@ public:
         }
     }
 
+    inline void log()
+    {
+        std::clog << "PerformanceMeasurement - " << _eventName << " execution time : " << getSpentTimeTillNow() << " " << _unitStr << "\n";
+    }
+
     inline ~PerformanceMeasurement()
     {
         if(_printLogOnDestruction)
         {
-            std::string unitStr;
-
-            switch (_unit)
-            {
-                case PerformanceMeasurementUnit::NanoSecond:
-                {
-                    unitStr = std::string("NanoSeconds");
-                    break;
-                }
-                case PerformanceMeasurementUnit::MicroSecond:
-                {
-                    unitStr = std::string("MicroSeconds");
-                    break;
-                }
-                case PerformanceMeasurementUnit::MilliSecond:
-                {
-                    unitStr = std::string("MilliSeconds");
-                    break;
-                }
-                case PerformanceMeasurementUnit::CentiSecond:
-                {
-                    unitStr = std::string("CentiSeconds");
-                    break;
-                }
-                case PerformanceMeasurementUnit::Second:
-                {
-                    unitStr = std::string("Seconds");
-                    break;
-                }
-                case PerformanceMeasurementUnit::Minute:
-                {
-                    unitStr = std::string("Minutes");
-                    break;
-                }
-            }
-
-            std::clog << "PerformanceMeasurement - " << _eventName << " execution time : " << getSpentTimeTillNow() << " " << unitStr << "\n";
+            log();
         }
 
         if(_saveResultToJsonFile && _canWriteToFile)
@@ -368,6 +379,7 @@ private:
     const std::chrono::time_point<std::chrono::high_resolution_clock, std::chrono::nanoseconds> _begin;
     std::chrono::time_point<std::chrono::high_resolution_clock, std::chrono::nanoseconds> _end;
     const PerformanceMeasurementUnit _unit;
+    const std::string                _unitStr{};
     std::string                      _eventName{};
     bool                             _saveResultToJsonFile;
     const bool                       _printLogOnDestruction;
