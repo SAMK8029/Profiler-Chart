@@ -15,6 +15,9 @@ enum class PerformanceMeasurementUnit
     Minute
 };
 
+
+#ifndef DO_NOT_MEASURE_PERFORMANCE
+
 // Helper macros for counting arguments
 #define MEASURE_PERFORMANCE_AS_OBJECT_COUNT(...) \
 MEASURE_PERFORMANCE_AS_OBJECT_COUNT_(__VA_ARGS__, 6, 5, 4, 3, 2, 1)
@@ -129,6 +132,12 @@ PERFORMANCE_SCOPE_CHOOSER(PERFORMANCE_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
 
 #define MEASURE_PERFORMANCE_FOR_FUNCTION_3(unit, saveResult, printLog) \
     PerformanceMeasurement CONCAT(_func_perf_, __LINE__)(FUNCTION_NAME_WITH_SIGNATURE, unit, saveResult, printLog)
+
+#else
+#define MEASURE_PERFORMANCE_AS_OBJECT(varName, ...)
+#define MEASURE_PERFORMANCE_FOR_ENTIRE_SCOPE(...)
+#define MEASURE_PERFORMANCE_FOR_FUNCTION(...)
+#endif
 
 struct ProfileResult
 {
