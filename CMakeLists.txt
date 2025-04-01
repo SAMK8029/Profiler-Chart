@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(chartsgallery LANGUAGES CXX)
+project(ProfilerChart LANGUAGES CXX)
 
 find_package(Qt6 REQUIRED COMPONENTS Charts Core Gui Widgets)
 
