@@ -1,19 +1,11 @@
+#pragma once
+
 #include <iostream>
 #include <string>
 #include <chrono>
 #include <algorithm>
 #include <fstream>
 #include <thread>
-
-enum class PerformanceMeasurementUnit
-{
-    NanoSecond  ,
-    MicroSecond ,
-    MilliSecond ,
-    CentiSecond ,
-    Second      ,
-    Minute
-};
 
 
 #ifndef DO_NOT_MEASURE_PERFORMANCE
@@ -149,6 +141,17 @@ PerformanceMeasurement CONCAT(_func_perf_, __LINE__)(FUNCTION_NAME_WITH_SIGNATUR
 #define BENCHMARK_JSON_END_SEESION(name)
 
 #endif
+
+
+enum class PerformanceMeasurementUnit
+{
+    NanoSecond  ,
+    MicroSecond ,
+    MilliSecond ,
+    CentiSecond ,
+    Second      ,
+    Minute
+};
 
 struct ProfileResult
 {
