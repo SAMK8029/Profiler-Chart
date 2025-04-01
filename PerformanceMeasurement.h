@@ -11,7 +11,7 @@
 #ifndef DO_NOT_MEASURE_PERFORMANCE
 
 #define BENCHMARK_JSON_BEGIN_SEESION(name) BenchmarkJson::beginSession(name)
-#define BENCHMARK_JSON_END_SEESION(name) BenchmarkJson::endSession()
+#define BENCHMARK_JSON_END_SEESION() BenchmarkJson::endSession()
 
 // Helper macros for counting arguments
 #define MEASURE_PERFORMANCE_AS_OBJECT_COUNT(...) \
