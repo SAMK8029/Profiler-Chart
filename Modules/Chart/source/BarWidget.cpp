@@ -279,14 +279,14 @@ QVector<EventData> BarWidget::processJsonFile(const QString &filePath)
         {
             if(eventsData.at(i).name == eventsData.at(j).name)
             {
-                eventsData[j].name += " (Call " + QString::number(++count) + ")";
+                eventsData[j].name += " - Call " + QString::number(++count);
                 repetitive = true;
             }
         }
 
         if(repetitive)
         {
-            eventsData[i].name += " (Call " + QString::number(1) + ")";
+            eventsData[i].name += " - Call " + QString::number(1);
         }
 
         _chartIndexToEventData.insert(i , eventsData.at(i));
