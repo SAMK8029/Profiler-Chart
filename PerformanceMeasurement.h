@@ -172,7 +172,7 @@ class BenchmarkJson
     ~BenchmarkJson()                               = delete;
 
 public:
-    static void beginSession(const std::string& filePath = "results.json")
+    static inline void beginSession(const std::string& filePath = "results.json")
     {
         std::filesystem::remove(filePath);
 
@@ -183,14 +183,14 @@ public:
         addHeader();
     }
 
-    static void endSession()
+    static inline void endSession()
     {
         addFooter();
 
         _profileCount = 0;
     }
 
-    static void appendProfileStr(const ProfileResult& result)
+    static inline void appendProfileStr(const ProfileResult& result)
     {
         if (_profileCount++ > 0)
         {
@@ -213,14 +213,14 @@ public:
         _outputStream.flush();
     }
 
-    static void addHeader()
+    static inline void addHeader()
     {
         _outputStream << "{\"otherData\": {},\"traceEvents\":[";
 
         _outputStream.flush();
     }
 
-    static void addFooter()
+    static inline void addFooter()
     {
         _outputStream << "]}";
 
