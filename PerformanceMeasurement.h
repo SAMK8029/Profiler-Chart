@@ -172,59 +172,67 @@ class BenchmarkJson
     ~BenchmarkJson()                               = delete;
 
 public:
-    static void beginSession(const std::string& filepath = "results.json")
+    static void beginSession(const std::string& filePath = "results.json")
     {
-        _outputStream.open(filepath);
-        writeHeader();
+        _filePath = filePath;
+        addHeader();
     }
 
     static void endSession()
     {
-        writeFooter();
-        _outputStream.close();
+        addFooter();
+        writeProfileToFile();
         _profileCount = 0;
     }
 
-    static void writeProfile(const ProfileResult& result)
+    static void writeProfileToFile()
+    {
+        _outputStream.open(_filePath);
+        _outputStream << _profileStr;
+        _outputStream.flush();
+        _outputStream.close();
+    }
+
+    static void appendProfileStr(const ProfileResult& result)
     {
         if (_profileCount++ > 0)
         {
-            _outputStream << ",";
+            _profileStr += ",";
         }
 
         std::replace(result.name.begin(), result.name.end(), '"', '\'');
 
-        _outputStream << "{\"cat\":\"event\"";
-        _outputStream << ",\"dur\":" << (result.dur);
-        _outputStream << ",\"name\":\"" << result.name << "\"";
-        _outputStream << ",\"ph\":\"X\"";
-        _outputStream << ",\"pid\":0";
-        _outputStream << ",\"tid\":" << result.threadId;
-        _outputStream << ",\"ts\":" << result.start;
-        _outputStream << ",\"beginTimePoint\":" << result.start;
-        _outputStream << ",\"endTimePoint\":" << result.end;
-        _outputStream << "}";
-
-        _outputStream.flush();
+        _profileStr += "{\"cat\":\"event\"";
+        _profileStr += ",\"dur\":" + std::to_string(result.dur);
+        _profileStr += ",\"name\":\"" + result.name + "\"";
+        _profileStr += ",\"ph\":\"X\"";
+        _profileStr += ",\"pid\":0";
+        _profileStr += ",\"tid\":" + std::to_string(result.threadId);
+        _profileStr += ",\"ts\":" + std::to_string(result.start);
+        _profileStr += ",\"beginTimePoint\":" + std::to_string(result.start);
+        _profileStr += ",\"endTimePoint\":" + std::to_string(result.end);
+        _profileStr += "}";
     }
 
-    static void writeHeader()
+    static void addHeader()
     {
-        _outputStream << "{\"otherData\": {},\"traceEvents\":[";
-        _outputStream.flush();
+        _profileStr += "{\"otherData\": {},\"traceEvents\":[";
     }
 
-    static void writeFooter()
+    static void addFooter()
     {
-        _outputStream << "]}";
-        _outputStream.flush();
+        _profileStr += "]}";
     }
 
 private:
-    static uint32_t      _profileCount;
-    static std::ofstream _outputStream;
+    static uint32_t       _profileCount;
+    static std::string    _profileStr;
+    static std::string    _filePath;
+    static std::ofstream  _outputStream;
 };
 uint32_t BenchmarkJson::_profileCount = 0;
+std::string BenchmarkJson::_profileStr{};
+std::string BenchmarkJson::_filePath{};
 std::ofstream BenchmarkJson::_outputStream{};
 
 
@@ -311,7 +319,7 @@ public:
         _saveResultToJsonFile = saveResultToJsonFile;
     }
 
-    inline PerformanceMeasurement(PerformanceMeasurementUnit unit = PerformanceMeasurementUnit::MicroSecond , bool printLogOnDestruction = true) : _begin(std::chrono::high_resolution_clock::now()) , _unit(unit) , _saveResultToJsonFile(false) , _unitStr(setUnitStr()) , _printLogOnDestruction(printLogOnDestruction) , _canWriteToFile(true)
+    inline PerformanceMeasurement(PerformanceMeasurementUnit unit = PerformanceMeasurementUnit::MicroSecond , bool printLogOnDestruction = true) : _begin(std::chrono::high_resolution_clock::now()) , _unit(unit) , _unitStr(setUnitStr()) , _saveResultToJsonFile(false) , _printLogOnDestruction(printLogOnDestruction) , _canWriteToFile(true)
     {
     }
 
@@ -321,7 +329,7 @@ public:
 
         if(_canWriteToFile && _saveResultToJsonFile)
         {
-            BenchmarkJson::writeProfile({_eventName, getSpentTimeInMicroSecond() , getBeginTimePointInMicroSecond() , getEndTimePointInMicroSecond() , std::hash<std::thread::id>{}(std::this_thread::get_id())});
+            BenchmarkJson::appendProfileStr({_eventName, getSpentTimeInMicroSecond() , getBeginTimePointInMicroSecond() , getEndTimePointInMicroSecond() , std::hash<std::thread::id>{}(std::this_thread::get_id())});
             _canWriteToFile = false;
         }
 
@@ -372,7 +380,7 @@ public:
         {
             setEndTimePoint();
 
-            BenchmarkJson::writeProfile({_eventName, getSpentTimeInMicroSecond() , getBeginTimePointInMicroSecond() , getEndTimePointInMicroSecond() , std::hash<std::thread::id>{}(std::this_thread::get_id())});
+            BenchmarkJson::appendProfileStr({_eventName, getSpentTimeInMicroSecond() , getBeginTimePointInMicroSecond() , getEndTimePointInMicroSecond() , std::hash<std::thread::id>{}(std::this_thread::get_id())});
 
             _canWriteToFile = false;
         }
@@ -388,4 +396,4 @@ private:
     const bool                       _printLogOnDestruction;
     bool                             _canWriteToFile;
     bool                             _isEndTimePointInitialized = false;
-};
+}
