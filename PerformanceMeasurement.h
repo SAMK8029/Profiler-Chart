@@ -174,65 +174,66 @@ class BenchmarkJson
 public:
     static void beginSession(const std::string& filePath = "results.json")
     {
-        _filePath = filePath;
+        std::filesystem::remove(filePath);
+
+        _outputStream.open(filePath , std::ios::app);
+
+        _profileCount = 0;
+
         addHeader();
     }
 
     static void endSession()
     {
         addFooter();
-        writeProfileToFile();
-        _profileCount = 0;
-    }
 
-    static void writeProfileToFile()
-    {
-        _outputStream.open(_filePath);
-        _outputStream << _profileStr;
-        _outputStream.flush();
-        _outputStream.close();
+        _profileCount = 0;
     }
 
     static void appendProfileStr(const ProfileResult& result)
     {
         if (_profileCount++ > 0)
         {
-            _profileStr += ",";
+            _outputStream << ",";
         }
 
         std::replace(result.name.begin(), result.name.end(), '"', '\'');
 
-        _profileStr += "{\"cat\":\"event\"";
-        _profileStr += ",\"dur\":" + std::to_string(result.dur);
-        _profileStr += ",\"name\":\"" + result.name + "\"";
-        _profileStr += ",\"ph\":\"X\"";
-        _profileStr += ",\"pid\":0";
-        _profileStr += ",\"tid\":" + std::to_string(result.threadId);
-        _profileStr += ",\"ts\":" + std::to_string(result.start);
-        _profileStr += ",\"beginTimePoint\":" + std::to_string(result.start);
-        _profileStr += ",\"endTimePoint\":" + std::to_string(result.end);
-        _profileStr += "}";
+        _outputStream << "{\"cat\":\"event\"";
+        _outputStream << ",\"dur\":" + std::to_string(result.dur);
+        _outputStream << ",\"name\":\"" + result.name + "\"";
+        _outputStream << ",\"ph\":\"X\"";
+        _outputStream << ",\"pid\":0";
+        _outputStream << ",\"tid\":" + std::to_string(result.threadId);
+        _outputStream << ",\"ts\":" + std::to_string(result.start);
+        _outputStream << ",\"beginTimePoint\":" + std::to_string(result.start);
+        _outputStream << ",\"endTimePoint\":" + std::to_string(result.end);
+        _outputStream << "}";
+
+        _outputStream.flush();
     }
 
     static void addHeader()
     {
-        _profileStr += "{\"otherData\": {},\"traceEvents\":[";
+        _outputStream << "{\"otherData\": {},\"traceEvents\":[";
+
+        _outputStream.flush();
     }
 
     static void addFooter()
     {
-        _profileStr += "]}";
+        _outputStream << "]}";
+
+        _outputStream.flush();
+
+        _outputStream.close();
     }
 
 private:
     static uint32_t       _profileCount;
-    static std::string    _profileStr;
-    static std::string    _filePath;
     static std::ofstream  _outputStream;
 };
 uint32_t BenchmarkJson::_profileCount = 0;
-std::string BenchmarkJson::_profileStr{};
-std::string BenchmarkJson::_filePath{};
 std::ofstream BenchmarkJson::_outputStream{};
 
 
@@ -373,7 +374,9 @@ public:
     {
         if(_printLogOnDestruction)
         {
+            _canWriteToFile = false;
             log();
+            _canWriteToFile = true;
         }
 
         if(_saveResultToJsonFile && _canWriteToFile)
@@ -396,4 +399,4 @@ private:
     const bool                       _printLogOnDestruction;
     bool                             _canWriteToFile;
     bool                             _isEndTimePointInitialized = false;
-}
+};
